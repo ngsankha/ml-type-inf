@@ -11,19 +11,6 @@ from operator import itemgetter
 import torch
 from torch.utils.data.dataset import Dataset
 
-
-## LABEL_CHOICE:
-##   -"TOP" if picking the top most occuring labels in the dataset
-##   -"PROG" if picking the labels occuring in at least MIN_PROGNUM_LABELS programs
-LABEL_CHOICE = "PROG"
-
-## Number of labels to pick from.
-LABEL_NUM = 100
-
-## When LABEL_CHOICE is "PROG", this is the minimum number of programs a type should occur
-## in for it to be used as a label.
-MIN_PROGNUM_LABELS = 5
-
 def create_names_dataset(file_name):
     data_file = json.load(open(file_name, 'r'))
     # dataset will be a list of dicts of structure {'input': 'IDENTIFER_NAME', 'output': 'TYPE'}
@@ -50,19 +37,7 @@ def create_names_dataset(file_name):
 
     ## below lines of code compute the count of how many programs each type appears in
     ## currently we don't use this count for anything, but it may be useful in the future
-    ## for determining which types we want to predict.
-    '''                    
-    type_progcount = {}
-    for typ in Counter([x['output'] for x in dataset]).keys():
-    #TABprog_count = 0
-    #TABfor prog_typs in prog_type_dict.values():
-    #TAB    if typ in prog_typs:
-    #TAB        prog_count += 1
-    #TABtype_progcount[typ] = prog_count
-
-    print(sorted(type_progcount.items(), key=itemgetter(1))[::-1])
-    '''
-                            
+    ## for determining which types we want to predict.                            
     return [dataset, prog_type_dict]
 
 def create_comments_dataset(file_name):
@@ -195,52 +170,6 @@ def prepare_data(dataset, lang_tokenizer, label_to_idx):
     ## slice in/out data together to create dataset
     return tf.data.Dataset.from_tensor_slices((in_data, output_data))
 
-
-'''
-dataset, prog_type_dict = create_names_dataset(DATA_FILE)
-label_to_idx, idx_to_label = create_labels(dataset, prog_type_dict)
-num_labels = len(label_to_idx)
-lang_tokenizer = create_tokenizer(dataset)
-vocab_size = max(lang_tokenizer.index_word.keys())
-## SAVE TOKENIZER
-with open('tokenizer.pickle', 'wb') as handle:
-    pickle.dump(lang_tokenizer, handle, protocol=pickle.HIGHEST_PROTOCOL)
-train_dataset, dev_dataset = split_train_dev(dataset)
-train_ds = prepare_data(train_dataset, label_to_idx)
-dev_ds = prepare_data(dev_dataset, label_to_idx)
-# shuffle and create batches
-batch_size = 128
-train_ds = train_ds.shuffle(20000).batch(batch_size)
-dev_ds = dev_ds.shuffle(20000).batch(batch_size)
-
-## initialize/compile model
-model = tf.keras.Sequential([
-    tf.keras.layers.Embedding(vocab_size + 1, 128, mask_zero=True),
-    #tf.keras.layers.Masking(mask_value=0.,input_shape=(66, vocab_size)),
-    tf.keras.layers.LSTM(64),
-    tf.keras.layers.Dense(64, activation='relu'),
-    tf.keras.layers.Dense(num_labels)
-])
-
-model.compile(loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-              optimizer=tf.keras.optimizers.Adam(1e-4),
-              metrics=['accuracy'])
-
-
-## TRAINING
-## uncomment below to train/save model
-history = model.fit(train_ds, epochs=10, validation_data=dev_ds)
-model.save("id_char_model.h5")
-
-## LOAD SAVED MODEL
-#model = load_model("id_char_model.h5")
-
-## test out the model on ID name "str"
-#x = model.predict(lang_tokenizer.texts_to_sequences(["str"]))
-
-## convert max output back into label, print
-#print(idx_to_label[np.argmax(x)])
-'''
 
 
 
