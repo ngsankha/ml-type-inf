@@ -23,6 +23,9 @@ LABEL_NUM = 100
 ## in for it to be used as a label.
 MIN_PROGNUM_LABELS = 5
 
+## When true, special type "#other#" will be used for all types out side of core labels.
+USE_OTHER_TYPE = False
+
 dataset, prog_type_dict = setup_model.create_comments_dataset(DATA_FILE)
 lang_tokenizer = setup_model.create_tokenizer(dataset)
 vocab_size = max(lang_tokenizer.index_word.keys())
@@ -32,11 +35,11 @@ with open('comments_tokenizer.pickle', 'wb') as handle:
 ## LOAD TOKENIZER    
 #with open('comments_tokenizer.pickle', 'rb') as handle:
 #    lang_tokenizer = pickle.load(handle)
-label_to_idx, idx_to_label = setup_model.create_labels(dataset, prog_type_dict, LABEL_CHOICE, LABEL_NUM, MIN_PROGNUM_LABELS)
+label_to_idx, idx_to_label = setup_model.create_labels(dataset, prog_type_dict, LABEL_CHOICE, USE_OTHER_TYPE, LABEL_NUM, MIN_PROGNUM_LABELS)
 num_labels = len(label_to_idx)
 train_dataset, dev_dataset = setup_model.split_train_dev(dataset)
-train_ds = setup_model.prepare_data(train_dataset, lang_tokenizer, label_to_idx)
-dev_ds = setup_model.prepare_data(dev_dataset, lang_tokenizer, label_to_idx)
+train_ds = setup_model.prepare_data(train_dataset, lang_tokenizer, label_to_idx, USE_OTHER_TYPE)
+dev_ds = setup_model.prepare_data(dev_dataset, lang_tokenizer, label_to_idx, USE_OTHER_TYPE)
 # shuffle and create batches
 batch_size = 128
 train_ds = train_ds.shuffle(20000).batch(batch_size)
