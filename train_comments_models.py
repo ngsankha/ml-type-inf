@@ -35,7 +35,7 @@ with open('comments_tokenizer.pickle', 'wb') as handle:
 label_to_idx, idx_to_label = setup_model.create_labels(dataset, prog_type_dict, LABEL_CHOICE, LABEL_NUM, MIN_PROGNUM_LABELS)
 num_labels = len(label_to_idx)
 train_dataset, dev_dataset = setup_model.split_train_dev(dataset)
-train_ds = setup_model.prepare_data(train_dataset, lang_tokenizer, label_to_idxf)
+train_ds = setup_model.prepare_data(train_dataset, lang_tokenizer, label_to_idx)
 dev_ds = setup_model.prepare_data(dev_dataset, lang_tokenizer, label_to_idx)
 # shuffle and create batches
 batch_size = 128
