@@ -14,7 +14,7 @@ DATA_FILE='./type-data.json'
 ## LABEL_CHOICE:
 ##   -"TOP" if picking the top most occuring labels in the dataset
 ##   -"PROG" if picking the labels occuring in at least MIN_PROGNUM_LABELS programs
-LABEL_CHOICE = "PROG"
+LABEL_CHOICE = "TOP"
 
 ## Number of labels to pick from.
 LABEL_NUM = 100
@@ -27,15 +27,17 @@ dataset, prog_type_dict = setup_model.create_comments_dataset(DATA_FILE)
 lang_tokenizer = setup_model.create_tokenizer(dataset)
 vocab_size = max(lang_tokenizer.index_word.keys())
 ## SAVE TOKENIZER
-with open('comments_tokenizer.pickle', 'wb') as handle:
+with open('tokenizers/comments_tokenizer.pickle', 'wb') as handle:
     pickle.dump(lang_tokenizer, handle, protocol=pickle.HIGHEST_PROTOCOL)
 ## LOAD TOKENIZER    
-#with open('tokenizer.pickle', 'rb') as handle:
+#with open('tokenizers/comments_tokenizer.pickle', 'rb') as handle:
 #    lang_tokenizer = pickle.load(handle)
 label_to_idx, idx_to_label = setup_model.create_labels(dataset, prog_type_dict, LABEL_CHOICE, LABEL_NUM, MIN_PROGNUM_LABELS)
+setup_model.save_labels(label_to_idx, 'comments_{}_label_to_idx'.format(LABEL_CHOICE))
+setup_model.save_labels(idx_to_label, 'comments_{}_idx_to_label'.format(LABEL_CHOICE))
 num_labels = len(label_to_idx)
 train_dataset, dev_dataset = setup_model.split_train_dev(dataset)
-train_ds = setup_model.prepare_data(train_dataset, lang_tokenizer, label_to_idxf)
+train_ds = setup_model.prepare_data(train_dataset, lang_tokenizer, label_to_idx)
 dev_ds = setup_model.prepare_data(dev_dataset, lang_tokenizer, label_to_idx)
 # shuffle and create batches
 batch_size = 128
@@ -58,10 +60,10 @@ model.compile(loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=Tru
               metrics=['accuracy'])
 
 history = model.fit(train_ds, epochs=10, validation_data=dev_ds)
-model.save('comments_{}_model.h5'.format(LABEL_CHOICE))
+model.save('models/comments_{}_model.h5'.format(LABEL_CHOICE))
 
 ## LOAD SAVED MODEL
-#model = load_model('comments_{}_model.h5'.format(LABEL_CHOICE))
+#model = load_model('models/comments_{}_model.h5'.format(LABEL_CHOICE))
 
 ## test out the model on ID name "str"
 #x = model.predict(lang_tokenizer.texts_to_sequences(["str"]))

@@ -170,7 +170,9 @@ def prepare_data(dataset, lang_tokenizer, label_to_idx):
     ## slice in/out data together to create dataset
     return tf.data.Dataset.from_tensor_slices((in_data, output_data))
 
-
+def save_labels(d, name):
+    with open('labels/'+ name + '.pkl', 'wb') as f:
+        pickle.dump(d, f, pickle.HIGHEST_PROTOCOL)
 
 
 
