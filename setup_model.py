@@ -11,6 +11,9 @@ from operator import itemgetter
 import torch
 from torch.utils.data.dataset import Dataset
 
+## label to use for "other" type
+OTHER_TYPE = "#other#"
+
 def create_names_dataset(file_name):
     data_file = json.load(open(file_name, 'r'))
     # dataset will be a list of dicts of structure {'input': 'IDENTIFER_NAME', 'output': 'TYPE'}
@@ -110,12 +113,14 @@ def choose_top_labels(dataset, prog_type_dict, label_choice, label_num, min_prog
         print('unexpected value of label_choice: {}'.format(label_choice))
         raise ValueError
 
-def create_labels(dataset, prog_type_dict, label_choice, label_num=100, min_prognum_labels=5):
+def create_labels(dataset, prog_type_dict, label_choice, use_other, label_num=100, min_prognum_labels=5):
     ## create label indices, and dict to map back from index to label name
     top_labels = choose_top_labels(dataset, prog_type_dict, label_choice, label_num, min_prognum_labels)
-    ## plus 1 needed below because we use these as conditional guards later on
     label_to_idx = {x: top_labels.index(x) for x in top_labels}
     idx_to_label = {v: k for k,v in label_to_idx.items()}
+    if use_other:
+        label_to_idx[OTHER_TYPE] = len(top_labels) + 1
+        idx_to_label[len(top_labels)] = OTHER_TYPE
 
     ## print test below
     #print("string to idx: {}".format(label_to_idx['hash']))
@@ -151,7 +156,7 @@ def split_train_dev(dataset):
     train_dataset, dev_dataset = torch.utils.data.random_split(dataset, [train_size, dev_size])
     return [train_dataset, dev_dataset]
 
-def prepare_data(dataset, lang_tokenizer, label_to_idx):
+def prepare_data(dataset, lang_tokenizer, label_to_idx, use_other):
     ## prepare input/output data
     input_data = []
     output_data = []
@@ -162,7 +167,9 @@ def prepare_data(dataset, lang_tokenizer, label_to_idx):
         if label_to_idx.get(sample['output'], -1) > -1:
             input_data.append(lang_tokenizer.texts_to_sequences(sample['input']))
             output_data.append(label_to_idx[sample['output']])
-
+        elif use_other:
+            input_data.append(lang_tokenizer.texts_to_sequences(sample['input']))
+            output_data.append(label_to_idx[OTHER_TYPE])
 
     ## pad sequences so they're all same length
     in_data = tf.keras.preprocessing.sequence.pad_sequences(input_data).squeeze()
