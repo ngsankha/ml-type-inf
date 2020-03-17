@@ -66,7 +66,33 @@ def create_comments_dataset(file_name):
                         dataset.append(t)
                         prog_type_dict.setdefault(program, set()).add(param_type)
     return [dataset, prog_type_dict]
-                
+
+
+def create_nc_dataset(file_name, delimiter):
+    data_file = json.load(open(file_name, 'r'))
+    # dataset will be a list of dicts of structure {'input': 'COMMENT', 'output': 'TYPE'}    
+    dataset = []
+    max_doc_size = 500 ## TEMPORARY TO CAP COMMENT SIZE
+    prog_type_dict = {} ## dict to keep track of which programs feature which types
+    for program,prog_vals in data_file.items():
+        for class_key, class_val in prog_vals.items():
+            for method, method_data in class_val.items():
+                if method_data.get('return', None) and method_data['return'].get('type', None) and method_data['return'].get('doc', None):
+                    ret_type = method_data['return']['type'].lower()
+                    ret_doc = method_data['return']['doc']
+                    t = {'input': method + delimiter + ret_doc[:max_doc_size].replace(delimiter, ""), 'output': ret_type}
+                    dataset.append(t)
+                    prog_type_dict.setdefault(program, set()).add(ret_type)
+                for param_name,param_hash in method_data['params'].items():
+                    if param_hash.get('type', None) and param_hash.get('doc', None):
+                        param_type = param_hash['type'].lower()
+                        param_doc = param_hash['doc'].lower()
+                        t = {'input': param_name + delimiter + param_doc[:max_doc_size].replace(delimiter, ""), 'output': param_type}
+                        dataset.append(t)
+                        prog_type_dict.setdefault(program, set()).add(param_type)
+    return [dataset, prog_type_dict]
+    
+
 
 ## below lines of code compute the count of how many programs each type appears in
 ## currently we don't use this count for anything, but it may be useful in the future
