@@ -29,6 +29,11 @@ USE_OTHER_TYPE = False
 ## Delimiter to separate names from comments
 DELIMITER = "^"
 
+if USE_OTHER_TYPE:
+    other_tag = "_OTHER_"
+else:
+    other_tag = ""
+
 dataset, prog_type_dict = setup_model.create_nc_dataset(DATA_FILE)
 lang_tokenizer = setup_model.create_tokenizer(dataset)
 vocab_size = max(lang_tokenizer.index_word.keys())
@@ -39,8 +44,8 @@ with open('tokenizers/nc_tokenizer.pickle', 'wb') as handle:
 #with open('tokenizers/nc_tokenizer.pickle', 'rb') as handle:
 #    lang_tokenizer = pickle.load(handle)
 label_to_idx, idx_to_label = setup_model.create_labels(dataset, prog_type_dict, LABEL_CHOICE, USE_OTHER_TYPE, LABEL_NUM, MIN_PROGNUM_LABELS)
-setup_model.save_labels(label_to_idx, 'nc_{}_label_to_idx'.format(LABEL_CHOICE))
-setup_model.save_labels(idx_to_label, 'nc_{}_idx_to_label'.format(LABEL_CHOICE))
+setup_model.save_labels(label_to_idx, 'nc_{}_{}label_to_idx'.format(LABEL_CHOICE, other_tag))
+setup_model.save_labels(idx_to_label, 'nc_{}_{}idx_to_label'.format(LABEL_CHOICE, other_tag))
 num_labels = len(label_to_idx)
 train_dataset, dev_dataset = setup_model.split_train_dev(dataset)
 train_ds = setup_model.prepare_data(train_dataset, lang_tokenizer, label_to_idx, USE_OTHER_TYPE)
@@ -66,7 +71,7 @@ model.compile(loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=Tru
               metrics=['accuracy'])
 
 history = model.fit(train_ds, epochs=10, validation_data=dev_ds)
-model.save('models/nc_{}_model.h5'.format(LABEL_CHOICE))
+model.save('models/nc_{}_{}model.h5'.format(LABEL_CHOICE, other_tag))
 
 ## LOAD SAVED MODEL
 #model = load_model('models/nc_{}_model.h5'.format(LABEL_CHOICE))
