@@ -34,7 +34,7 @@ if USE_OTHER_TYPE:
 else:
     other_tag = ""
 
-dataset, prog_type_dict = setup_model.create_nc_dataset(DATA_FILE)
+dataset, prog_type_dict = setup_model.create_nc_dataset(DATA_FILE, DELIMITER)
 lang_tokenizer = setup_model.create_tokenizer(dataset)
 vocab_size = max(lang_tokenizer.index_word.keys())
 ## SAVE TOKENIZER

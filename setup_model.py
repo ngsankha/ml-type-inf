@@ -2,6 +2,8 @@
 import json
 from collections import Counter
 import numpy as np
+import numpy.random as rng
+
 
 import tensorflow as tf
 import tensorflow_text as text
@@ -135,6 +137,8 @@ def choose_top_labels(dataset, prog_type_dict, label_choice, label_num, min_prog
                     prog_count += 1
             type_progcount[typ] = prog_count
         return [key for key,value in type_progcount.items() if value >= min_prognum_labels]
+    elif (label_choice == "ALL"):
+        [x['output'] for x in dataset]
     else:
         print('unexpected value of label_choice: {}'.format(label_choice))
         raise ValueError
@@ -206,6 +210,73 @@ def prepare_data(dataset, lang_tokenizer, label_to_idx, use_other):
 def save_labels(d, name):
     with open('labels/'+ name + '.pkl', 'wb') as f:
         pickle.dump(d, f, pickle.HIGHEST_PROTOCOL)
+
+
+def get_twin_data(dataset, data_size, lang_tokenizer, label_to_idx, use_other):
+    ## prepare input/output data
+    input_data = []
+    output_data = []
+
+    for sample in dataset:
+        ## only use data which falls in top N types
+        ## TODO: do we want to have an "other" type?
+        if label_to_idx.get(sample['output'], -1) > -1:
+            input_data.append(lang_tokenizer.texts_to_sequences(sample['input']))
+            output_data.append(label_to_idx[sample['output']])
+        elif use_other:
+            input_data.append(lang_tokenizer.texts_to_sequences(sample['input']))
+            output_data.append(label_to_idx[OTHER_TYPE])
+
+    ## pad sequences so they're all same length
+    in_data = tf.keras.preprocessing.sequence.pad_sequences(input_data).squeeze()
+
+    ## create mapping from each label to set of inputs of that label
+    label_input_map = {}
+    for i, val in enumerate(output_data):
+        label_input_map.setdefault(val, []).append(in_data[i])
+
+    ## delete any labels for which pair doesn't exist
+    to_delete = [key for key in label_input_map if len(label_input_map[key]) < 2]
+    for key in to_delete: del label_input_map[key]
+
+    num_data, in_dim = in_data.shape
+
+    ## pairs is list of two arrays. for all i, pairs[0][i] and pairs[1][i] constitute a single datapoint.
+    pairs = [np.zeros((data_size, in_dim)) for i in range(2)]
+
+    ## targets is array of labels for data in `pairs`.
+    ## Labels are similarity scores, 0 == no similarity, 1 == high similarity.
+    ## Make second half of targets all 1s, and we will make pairs match this configuration.
+    targets=np.zeros((data_size,))
+    targets[data_size//2:] = 1
+
+    for i in range(data_size):
+        ## pick first data point
+        chosen_type1 = rng.choice(list(label_input_map.keys()))
+        #chosen_in1 = label_input_map[chosen_type1].pop(rng.randint(len(label_input_map[chosen_type1])))
+        chosen_in1 = label_input_map[chosen_type1][rng.randint(len(label_input_map[chosen_type1]))]
+        
+        pairs[0][i] = chosen_in1
+
+        ## for first half of data, choose dissimilar points. second half choose similar points.
+        if i >= data_size // 2:
+            chosen_type2 = chosen_type1
+        else:
+            chosen_type2 = rng.choice([x for x in label_input_map.keys() if chosen_type1 != x])
+
+        #chosen_in2 = label_input_map[chosen_type2].pop(rng.randint(len(label_input_map[chosen_type2])))
+        chosen_in2 = label_input_map[chosen_type2][rng.randint(len(label_input_map[chosen_type2]))]
+
+        pairs[1][i] = chosen_in2
+
+
+        ## delete keys from dict if number of types is too low
+        if len(label_input_map[chosen_type1]) < 2:
+            del label_input_map[chosen_type1]
+        if (chosen_type2 != chosen_type1) and len(label_input_map[chosen_type2]) < 2:
+            del label_input_map[chosen_type2]
+
+    return pairs, targets
 
 
 
