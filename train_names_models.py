@@ -11,6 +11,7 @@ from operator import itemgetter
 import torch
 from torch.utils.data.dataset import Dataset
 import sys
+import os
 
 ## parameters
 tf.compat.v1.flags.DEFINE_integer("emb_dim", 128, "Number of embedding dims for character)")
@@ -57,12 +58,15 @@ else:
 dataset, prog_type_dict = setup_model.create_names_dataset(DATA_FILE)
 lang_tokenizer = setup_model.create_tokenizer(dataset)
 vocab_size = max(lang_tokenizer.index_word.keys())
+## Make tokenizers folder if it doesn't exist
+if not os.path.exists('tokenizers'):
+    os.makedirs('tokenizers')
 # SAVE TOKENIZER
 with open('tokenizers/names_tokenizer.pickle', 'wb') as handle:
     pickle.dump(lang_tokenizer, handle, protocol=pickle.HIGHEST_PROTOCOL)
 # LOAD TOKENIZER    
-with open('tokenizers/names_tokenizer.pickle', 'rb') as handle:
-    lang_tokenizer = pickle.load(handle)
+#with open('tokenizers/names_tokenizer.pickle', 'rb') as handle:
+#    lang_tokenizer = pickle.load(handle)
 label_to_idx, idx_to_label = setup_model.create_labels(dataset, prog_type_dict, LABEL_CHOICE, USE_OTHER_TYPE, LABEL_NUM, MIN_PROGNUM_LABELS)
 setup_model.save_labels(label_to_idx, 'names_{}_{}label_to_idx'.format(LABEL_CHOICE, other_tag))
 setup_model.save_labels(idx_to_label, 'names_{}_{}idx_to_label'.format(LABEL_CHOICE, other_tag))
@@ -91,6 +95,9 @@ model.compile(loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=Tru
               metrics=['accuracy'])
 
 history = model.fit(train_ds, epochs=FLAGS.epochs, validation_data=dev_ds)
+
+if not os.path.exists('models'):
+    os.makedirs('models')
 
 model.save('models/names_{}_{}_{}_{}_{}_{}_{}_{}_model.h5'.format(LABEL_CHOICE, other_tag, FLAGS.emb_dim, FLAGS.batch_size, FLAGS.epochs, FLAGS.lr, FLAGS.hidden_units_lstm, FLAGS.hidden_units_dense))
 
