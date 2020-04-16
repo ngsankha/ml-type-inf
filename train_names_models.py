@@ -87,7 +87,7 @@ model = tf.keras.Sequential([
     #tf.keras.layers.Masking(mask_value=0.,input_shape=(66, vocab_size)),
     tf.keras.layers.LSTM(FLAGS.hidden_units_lstm),
     tf.keras.layers.Dense(FLAGS.hidden_units_dense, activation='relu'),
-    tf.keras.layers.Dense(num_labels)
+    tf.keras.layers.Dense(num_labels + 1)
 ])
 
 model.compile(loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
