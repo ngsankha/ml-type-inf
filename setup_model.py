@@ -12,6 +12,7 @@ import pickle
 from operator import itemgetter
 import torch
 from torch.utils.data.dataset import Dataset
+import os
 
 ## label to use for "other" type
 OTHER_TYPE = "#other#"
@@ -226,6 +227,8 @@ def prepare_data(dataset, lang_tokenizer, label_to_idx, use_other):
     return tf.data.Dataset.from_tensor_slices((in_data, output_data))
 
 def save_labels(d, name):
+    if not os.path.exists('labels'):
+        os.makedirs('labels')
     with open('labels/'+ name + '.pkl', 'wb') as f:
         pickle.dump(d, f, pickle.HIGHEST_PROTOCOL)
 
