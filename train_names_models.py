@@ -61,8 +61,8 @@ vocab_size = max(lang_tokenizer.index_word.keys())
 with open('tokenizers/names_tokenizer.pickle', 'wb') as handle:
     pickle.dump(lang_tokenizer, handle, protocol=pickle.HIGHEST_PROTOCOL)
 # LOAD TOKENIZER    
-with open('tokenizers/names_tokenizer.pickle', 'rb') as handle:
-    lang_tokenizer = pickle.load(handle)
+#with open('tokenizers/names_tokenizer.pickle', 'rb') as handle:
+#    lang_tokenizer = pickle.load(handle)
 label_to_idx, idx_to_label = setup_model.create_labels(dataset, prog_type_dict, LABEL_CHOICE, USE_OTHER_TYPE, LABEL_NUM, MIN_PROGNUM_LABELS)
 setup_model.save_labels(label_to_idx, 'names_{}_{}label_to_idx'.format(LABEL_CHOICE, other_tag))
 setup_model.save_labels(idx_to_label, 'names_{}_{}idx_to_label'.format(LABEL_CHOICE, other_tag))
