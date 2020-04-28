@@ -66,10 +66,10 @@ num_labels = len(label_to_idx)
 train_dataset, dev_dataset = setup_model.split_train_dev(dataset)
 #train_ds = setup_model.prepare_data(train_dataset, lang_tokenizer, label_to_idx, USE_OTHER_TYPE)
 #dev_ds = setup_model.prepare_data(dev_dataset, lang_tokenizer, label_to_idx, USE_OTHER_TYPE)
-train_ds = setup_model.get_twin_data(train_dataset, DATA_SIZE, lang_tokenizer, label_to_idx, USE_OTHER_TYPE)
+#train_ds = setup_model.get_twin_data(train_dataset, DATA_SIZE, lang_tokenizer, label_to_idx, USE_OTHER_TYPE)
+train_ds = setup_model.get_prog_twin_data(train_dataset, DATA_SIZE, lang_tokenizer, label_to_idx, USE_OTHER_TYPE)
 input_dim = len(train_ds[0][0][0])
 
-print("GOT input_dim OF {}".format(input_dim))
 
 def get_twin_net(input_dim):
     left_input = tf.keras.Input(input_dim)
@@ -107,7 +107,7 @@ optimizer = tf.keras.optimizers.Adam(lr = 0.00006)
 model.compile(loss="binary_crossentropy",optimizer=optimizer, metrics=['accuracy'])
 model.fit(x=train_ds[0], y=train_ds[1], epochs=10)
 
-model.save('models/twin_{}_{}model.h5'.format(LABEL_CHOICE, other_tag))
+model.save('models/twin_{}_{}_PROG_model.h5'.format(LABEL_CHOICE, other_tag))
 
     
 
