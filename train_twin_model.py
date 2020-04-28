@@ -10,7 +10,7 @@ from tensorflow.keras import backend as K
 
 
 
-DATA_FILE='../type-data.json'
+DATA_FILE='./type-data.json'
 
 ## LABEL_CHOICE:
 ##   -"TOP" if picking the top most occuring labels in the dataset
@@ -18,7 +18,7 @@ DATA_FILE='../type-data.json'
 LABEL_CHOICE = "TOP"
 
 ## Number of labels to pick from.
-LABEL_NUM = 100
+LABEL_NUM = 1000
 
 ## When LABEL_CHOICE is "PROG", this is the minimum number of programs a type should occur
 ## in for it to be used as a label.
@@ -30,7 +30,11 @@ USE_OTHER_TYPE = False
 ## Delimiter to separate names from comments
 DELIMITER = "^"
 
-DATA_SIZE = 500000
+## Should be "names", "comments" or "nc" (which is combination of both).
+## Gives type of input to train network on.
+input_type = "nc"
+
+DATA_SIZE = 100000
 
 if USE_OTHER_TYPE:
     other_tag = "_OTHER_"
@@ -38,7 +42,15 @@ else:
     other_tag = ""
 
 #dataset, prog_type_dict = setup_model.create_nc_dataset(DATA_FILE)
-dataset, prog_type_dict = setup_model.create_names_dataset(DATA_FILE)
+if input_type == "names":
+    dataset, prog_type_dict = setup_model.create_names_dataset(DATA_FILE)
+elif input_type == "comments":
+    dataset, prog_type_dict = setup_model.create_comments_dataset(DATA_FILE)
+elif input_type == "nc":
+    dataset, prog_type_dict = setup_model.create_nc_dataset(DATA_FILE, DELIMITER)
+else:
+    raise Exception("Got unexpected input_type of {}".format(input_type))
+
 lang_tokenizer = setup_model.create_tokenizer(dataset)
 vocab_size = max(lang_tokenizer.index_word.keys())
 ## SAVE TOKENIZER
