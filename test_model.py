@@ -26,18 +26,18 @@ with open('labels/{}_{}_idx_to_label.pkl'.format(MODEL_TYPE, LABEL_CHOICE), 'rb'
 
 ## LOAD LABELS
 with open('labels/{}_{}_label_to_idx.pkl'.format(MODEL_TYPE, LABEL_CHOICE), 'rb') as f:    
-    idx_to_label = pickle.load(f)
+    label_to_idx = pickle.load(f)
     
 ## LOAD SAVED MODEL
 model = load_model('models/{}_{}_model.h5'.format(MODEL_TYPE, LABEL_CHOICE))
 
 def evaluate_test_set():
     if MODEL_TYPE == "names":
-        test_dataset = setup_model.create_names_dataset(DATA_FILE, True)
+        test_dataset, _ = setup_model.create_names_dataset(DATA_FILE, True)
     elif MODEL_TYPE == "comments":
-        test_dataset = setup_model.create_comments_dataset(DATA_FILE, True)
+        test_dataset, _ = setup_model.create_comments_dataset(DATA_FILE, True)
     elif MODEL_TYPE == "nc":
-        test_dataset = setup_model.create_nc_dataset(DATA_FILE, True)
+        test_dataset, _ = setup_model.create_nc_dataset(DATA_FILE, True)
         ### TODO: twin model tests
 
     test_ds = setup_model.prepare_data(test_dataset, lang_tokenizer, label_to_idx, USE_OTHER_TYPE)
@@ -52,5 +52,5 @@ def run_model(inp):
 
 
 def run_twin_model(in1, in2):
-    emb1, emb2 = tf.keras.preprocessing.sequence.pad_sequences(lang_tokenizer.texts_to_sequences([in1, in2]), maxlen = 82).squeeze()
+    emb1, emb2 = tf.keras.preprocessing.sequence.pad_sequences(lang_tokenizer.texts_to_sequences([in1, in2]), maxlen = 550).squeeze()
     print(model.predict([[emb1], [emb2]]))
