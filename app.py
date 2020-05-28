@@ -40,7 +40,7 @@ model = load_model('models/twin__nc_TOP__PROG_model.h5')
 def run_twin_model(in1, in2):
     in1 = tf.keras.preprocessing.sequence.pad_sequences(lang_tokenizer.texts_to_sequences(in1), maxlen = 550).squeeze()
     in2 = tf.keras.preprocessing.sequence.pad_sequences(lang_tokenizer.texts_to_sequences(in2), maxlen = 550).squeeze()
-    pred = model.predict([in1, in2])
+    pred = model.predict([in1.reshape((1, -1)), in2.reshape((1, -1))])
     ## pred is Array<List<List<Float>>>, e.g.:
     #array([[0.94821054],
     #   [0.01682347]], dtype=float32)
@@ -68,7 +68,8 @@ def receive():
     print(words)
     print(type(words))
     scores = run_twin_model(words1, words2)
-    av = get_average(scores)
+    print(scores)
+    av = np.mean(scores)
     #in1 = request.args.get("in1")
     #in2 = request.args.get("in1")
     return "blah"#run_twin_model(in1, in2)
